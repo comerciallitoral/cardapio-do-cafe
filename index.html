@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>DO CAFÉ CAFETERIA</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
@@ -16,12 +16,14 @@ body {
   flex-direction: column;
   height: 100vh;
   color: #f5e6c8;
+  overflow-x: hidden;
 }
 
 header {
   text-align: center;
   padding: 20px;
   background: #1a120c;
+  position: relative;
 }
 
 header h1 {
@@ -36,12 +38,34 @@ header span {
   letter-spacing: 3px;
 }
 
+/* Mensagem temporária animada */
+.instrucao {
+  position: absolute;
+  bottom: 5px;
+  right: 15px;
+  font-size: 11px;
+  color: #f5e6c8;
+  opacity: 0;
+  font-style: italic;
+  transition: opacity 0.5s ease;
+}
+
+.instrucao.mostrar {
+  opacity: 0.8;
+}
+
+.instrucao.oculto {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .viewer {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 10px;
+  overflow: hidden;
 }
 
 .viewer img {
@@ -49,6 +73,7 @@ header span {
   max-height: 95%;
   border-radius: 10px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+  transition: opacity 0.3s ease;
 }
 
 .controls {
@@ -84,6 +109,7 @@ header span {
 <header>
   <h1>DO CAFÉ</h1>
   <span>CAFETERIA</span>
+  <div class="instrucao" id="instrucao"></div>
 </header>
 
 <div class="viewer">
@@ -99,8 +125,24 @@ let paginaAtual = 1;
 const totalPaginas = 20;
 const img = document.getElementById("pagina");
 const dotsContainer = document.getElementById("dots");
+const instrucao = document.getElementById("instrucao");
 
-// Criar pontinhos
+// Detecta se é mobile
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+// Define mensagem inicial
+instrucao.textContent = isMobile ? "Deslize → para próxima página" : "Clique → para próxima página";
+
+// Aparece com fade-in
+setTimeout(() => instrucao.classList.add("mostrar"), 100); 
+
+// Desaparece após 5 segundos
+setTimeout(() => {
+  instrucao.classList.remove("mostrar");
+  instrucao.classList.add("oculto");
+}, 5000);
+
+// Criar pontinhos clicáveis
 for (let i = 1; i <= totalPaginas; i++) {
   const dot = document.createElement("div");
   dot.className = "dot";
@@ -109,12 +151,14 @@ for (let i = 1; i <= totalPaginas; i++) {
   dotsContainer.appendChild(dot);
 }
 
+// Atualiza pontinhos ativos
 function atualizarDots() {
   const dots = document.querySelectorAll(".dot");
   dots.forEach(dot => dot.classList.remove("active"));
   dots[paginaAtual - 1].classList.add("active");
 }
 
+// Troca de página
 function mudarPagina(numero) {
   if (numero < 1 || numero > totalPaginas) return;
   paginaAtual = numero;
@@ -130,7 +174,7 @@ function anterior() {
   if (paginaAtual > 1) mudarPagina(paginaAtual - 1);
 }
 
-// Clique mouse (lado direito / esquerdo)
+// Clique com mouse (desktop)
 document.addEventListener("click", function(e) {
   if (!e.target.classList.contains("dot")) {
     if (e.clientX > window.innerWidth / 2) {
@@ -147,17 +191,34 @@ document.addEventListener("keydown", function(e) {
   if (e.key === "ArrowLeft") anterior();
 });
 
-// Swipe celular
+// Swipe celular com correção para iOS (ignora zoom/pinch)
 let startX = 0;
+let startY = 0;
+let isSwiping = false;
 
 document.addEventListener("touchstart", function(e) {
+  if (e.touches.length > 1) {
+    isSwiping = false;
+    return;
+  }
+  isSwiping = true;
   startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
 });
 
 document.addEventListener("touchend", function(e) {
+  if (!isSwiping) return;
+
   let endX = e.changedTouches[0].clientX;
-  if (startX - endX > 50) proxima();
-  if (endX - startX > 50) anterior();
+  let endY = e.changedTouches[0].clientY;
+
+  let diffX = startX - endX;
+  let diffY = Math.abs(startY - endY);
+
+  if (diffY > 50) return; // ignora scroll vertical
+
+  if (diffX > 60) proxima();
+  if (diffX < -60) anterior();
 });
 </script>
 
