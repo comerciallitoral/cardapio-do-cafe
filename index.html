@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO CAFÉ CAFETERIA</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Playfair Display', serif;
+  background: #2b1d13;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  color: #f5e6c8;
+}
+
+header {
+  text-align: center;
+  padding: 20px;
+  background: #1a120c;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 3px;
+  color: #d4af37;
+}
+
+header span {
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.viewer {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.viewer img {
+  max-width: 95%;
+  max-height: 95%;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+}
+
+.controls {
+  padding: 15px;
+  background: #1a120c;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  cursor: pointer;
+}
+
+.dot.active {
+  width: 18px;
+  border-radius: 10px;
+  background: #d4af37;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>DO CAFÉ</h1>
+  <span>CAFETERIA</span>
+</header>
+
+<div class="viewer">
+  <img id="pagina" src="pagina1.jpg">
+</div>
+
+<div class="controls">
+  <div class="dots" id="dots"></div>
+</div>
+
+<script>
+let paginaAtual = 1;
+const totalPaginas = 20;
+const img = document.getElementById("pagina");
+const dotsContainer = document.getElementById("dots");
+
+// Criar pontinhos
+for (let i = 1; i <= totalPaginas; i++) {
+  const dot = document.createElement("div");
+  dot.className = "dot";
+  dot.onclick = () => mudarPagina(i);
+  if (i === 1) dot.classList.add("active");
+  dotsContainer.appendChild(dot);
+}
+
+function atualizarDots() {
+  const dots = document.querySelectorAll(".dot");
+  dots.forEach(dot => dot.classList.remove("active"));
+  dots[paginaAtual - 1].classList.add("active");
+}
+
+function mudarPagina(numero) {
+  if (numero < 1 || numero > totalPaginas) return;
+  paginaAtual = numero;
+  img.src = "pagina" + paginaAtual + ".jpg";
+  atualizarDots();
+}
+
+function proxima() {
+  if (paginaAtual < totalPaginas) mudarPagina(paginaAtual + 1);
+}
+
+function anterior() {
+  if (paginaAtual > 1) mudarPagina(paginaAtual - 1);
+}
+
+// Clique mouse (lado direito / esquerdo)
+document.addEventListener("click", function(e) {
+  if (!e.target.classList.contains("dot")) {
+    if (e.clientX > window.innerWidth / 2) {
+      proxima();
+    } else {
+      anterior();
+    }
+  }
+});
+
+// Teclado
+document.addEventListener("keydown", function(e) {
+  if (e.key === "ArrowRight") proxima();
+  if (e.key === "ArrowLeft") anterior();
+});
+
+// Swipe celular
+let startX = 0;
+
+document.addEventListener("touchstart", function(e) {
+  startX = e.touches[0].clientX;
+});
+
+document.addEventListener("touchend", function(e) {
+  let endX = e.changedTouches[0].clientX;
+  if (startX - endX > 50) proxima();
+  if (endX - startX > 50) anterior();
+});
+</script>
+
+</body>
+</html>
